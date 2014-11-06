@@ -9,7 +9,7 @@ to send emails.
 ```php
 <?php
 
-require_once(__DIR__.'/email.php');
+require_once('email.php');
 
 $mail = new Email('smtp.example.com', 25);
 
@@ -31,7 +31,7 @@ if($mail->send()){
 ```php
 <?php
 
-require_once(__DIR__.'/email.php');
+require_once('email.php');
 
 $mail = new Email('smtp.example.com', 587);
 
@@ -56,14 +56,23 @@ like the following.
 ```php
 <?php
 
+// config.php
+
 define('SMTP_PRIMARY_EMAIL', 'sender@example.com');
 define('SMTP_PRIMARY_PASSWORD', 'my very secret password');
+```
+
+```php
+<?php
+
+require_once('config.php')
 
 // ...
 
 $mail->setLogin(SMTP_PRIMARY_EMAIL, SMTP_PRIMARY_PASSWORD);
 
 // ...
+
 ```
 It's also recommended to put the config outside the public web root if possible. 
 This for example prevents people from including your PHP file remotely by a 
