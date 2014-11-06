@@ -1,7 +1,7 @@
 PHP SMTP
 ========
 
-An easy to use SMTP (Simple Mail Transfer Protocol) application which helps you 
+An easy to use SMTP (Simple Mail Transfer Protocol) library which helps you 
 to send emails.
 
 ## Examples
@@ -49,3 +49,22 @@ if($mail->send()){
 }
 
 ```
+It's discouraged to hardcode the SMTP login creditials like in the examples above.
+It's recommended to put them inside another file and load it. An example would be
+like the following.
+
+```php
+<?php
+
+define('SMTP_PRIMARY_EMAIL', 'sender@example.com');
+define('SMTP_PRIMARY_PASSWORD', 'my very secret password');
+
+// ...
+
+$mail->setLogin(SMTP_PRIMARY_EMAIL, SMTP_PRIMARY_PASSWORD);
+
+// ...
+```
+It's also recommended to put the config outside the public web root if possible. 
+This for example prevents people from including your PHP file remotely by a 
+misconfiguration.
