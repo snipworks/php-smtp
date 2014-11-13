@@ -211,7 +211,7 @@ class Email
         }
 
         if (!empty($this->reply_to)) {
-            $this->headers['ReplyTo'] = $this->formatAddressList($this->reply_to);
+            $this->headers['Reply-To'] = $this->formatAddressList($this->reply_to);
         }
 
         $this->headers['Subject'] = $this->subject;
