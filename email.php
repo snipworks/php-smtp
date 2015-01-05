@@ -7,7 +7,7 @@
 class Email
 {
     const CRLF = "\r\n";
-    const TLS = 'tls';
+    const TLS = 'tcp';
     const SSL = 'ssl';
 
     protected $server;
@@ -30,6 +30,7 @@ class Email
     protected $message;
     protected $log;
     protected $is_html;
+    protected $tls = false;
     protected $protocol;
     
 
@@ -128,6 +129,10 @@ class Email
      */
     public function setProtocol($protocol = '')
     {
+        if($protocol == self::TLS){
+            $this->tls = true;
+        }
+        
         $this->protocol = $protocol;
     }
 
@@ -186,6 +191,15 @@ class Email
 
         $this->log['CONNECTION'] = $this->getResponse();
         $this->log['HELLO'] = $this->sendCMD('EHLO ' . $this->localhost);
+        
+        if($this->tls){
+            $this->log['STARTTLS'] = $this->sendCMD('STARTTLS');
+            
+            stream_socket_enable_crypto($this->socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            
+            $this->log['HELLO 2'] = $this->sendCMD('EHLO ' . $this->localhost);
+        }
+        
         $this->log['AUTH'] = $this->sendCMD('AUTH LOGIN');
         $this->log['USERNAME'] = $this->sendCMD(base64_encode($this->username));
         $this->log['PASSWORD'] = $this->sendCMD(base64_encode($this->password));
@@ -261,6 +275,7 @@ class Email
      */
     protected function sendCMD($cmd)
     {
+        // TODO: Error checking
         fputs($this->socket, $cmd . self::CRLF);
         return $this->getResponse();
     }
