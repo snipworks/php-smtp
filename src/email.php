@@ -1,14 +1,18 @@
 <?php
 
+namespace Snipworks\SMTP;
+
 /**
  * Send email class using SMTP Authentication
  * @class Email
+ * @package Snipworks\SMTP
  */
 class Email
 {
     const CRLF = "\r\n";
     const TLS = 'tcp';
     const SSL = 'ssl';
+    const OK = 250;
 
     protected $server;
     protected $port;
@@ -238,7 +242,7 @@ class Email
         $this->log['DATA'][2] = $this->sendCMD($headers . self::CRLF . $this->message . self::CRLF . '.');
         $this->log['QUIT'] = $this->sendCMD('QUIT');
         fclose($this->socket);
-        return substr($this->log['DATA'][2], 0, 3) == '250';
+        return substr($this->log['DATA'][2], 0, 3) == self::OK;
     }
 
     /**

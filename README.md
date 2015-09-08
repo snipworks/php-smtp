@@ -9,10 +9,10 @@ to send emails.
 ```php
 <?php
 
-require_once('email.php');
+use Snipworks\SMTP\Email;
+require_once('/path/to/src/email.php');
 
 $mail = new Email('smtp.example.com', 25);
-
 $mail->setLogin('sender@example.com', 'password');
 $mail->addTo('recipient@example.com', 'Example Receiver');
 $mail->setFrom('example@example.com', 'Example Sender');
@@ -31,10 +31,10 @@ if($mail->send()){
 ```php
 <?php
 
-require_once('email.php');
+use Snipworks\SMTP\Email;
+require_once('/path/to/src/email.php');
 
 $mail = new Email('smtp.example.com', 587);
-
 $mail->setProtocol(Email::TLS);
 $mail->setLogin('sender@example.com', 'password');
 $mail->addTo('recipient@example.com', 'Example Receiver');

@@ -1,6 +1,8 @@
 <?php
 
-require_once(__DIR__ . '/email.php');
+use Snipworks\SMTP\Email;
+require_once(dirname(__DIR__) . '/src/email.php');
+
 $mail = new Email('smtp.gmail.com', 465);
 $mail->setProtocol(Email::SSL); //SSL or TLS can be used. Or if there's other protocol you have 
 $mail->setLogin('<email address>', '<password>');
