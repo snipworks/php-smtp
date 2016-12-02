@@ -31,12 +31,14 @@ class Email
     protected $reply_to;
     protected $bcc;
     protected $subject;
-    protected $message;
+    protected $message_html = false;
+    protected $message_text = false;
     protected $log;
     protected $is_html;
     protected $tls = false;
     protected $protocol;
-    
+    protected $boundary = 'boundary';
+
 
     /**
      * Class constructor
@@ -62,8 +64,8 @@ class Email
         $this->is_html = false;
         $this->protocol = '';
         $this->charset = 'utf-8';
+        $this->boundary = sha1(microtime());
         $this->headers['MIME-Version'] = '1.0';
-        $this->headers['Content-type'] = 'text/plain; charset=' . $this->charset;
     }
 
     /**
@@ -133,10 +135,10 @@ class Email
      */
     public function setProtocol($protocol = '')
     {
-        if($protocol == self::TLS){
+        if ($protocol == self::TLS) {
             $this->tls = true;
         }
-        
+
         $this->protocol = $protocol;
     }
 
@@ -160,15 +162,34 @@ class Email
     }
 
     /**
+     * Set main HTML body message
+     * @param $message
+     */
+    public function setText($message)
+    {
+        $this->message_text = $message;
+    }
+
+    /**
+     * Set main text body message
+     * @param $message
+     */
+    public function setHTML($message)
+    {
+        $this->message_html = $message;
+    }
+
+    /**
      * Set main email body message
      * @param $message
      * @param bool $html
      */
     public function setMessage($message, $html = false)
     {
-        $this->message = $message;
         if ($html) {
-            $this->headers['Content-type'] = 'text/html; charset=' . $this->charset;
+            $this->setHTML($message);
+        } else {
+            $this->setText($message);
         }
     }
 
@@ -195,15 +216,15 @@ class Email
 
         $this->log['CONNECTION'] = $this->getResponse();
         $this->log['HELLO'] = $this->sendCMD('EHLO ' . $this->localhost);
-        
-        if($this->tls){
+
+        if ($this->tls) {
             $this->log['STARTTLS'] = $this->sendCMD('STARTTLS');
-            
+
             stream_socket_enable_crypto($this->socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
-            
+
             $this->log['HELLO 2'] = $this->sendCMD('EHLO ' . $this->localhost);
         }
-        
+
         $this->log['AUTH'] = $this->sendCMD('AUTH LOGIN');
         $this->log['USERNAME'] = $this->sendCMD(base64_encode($this->username));
         $this->log['PASSWORD'] = $this->sendCMD(base64_encode($this->password));
@@ -214,8 +235,23 @@ class Email
         }
 
         $this->log['DATA'][1] = $this->sendCMD('DATA');
-        if (!empty($this->content_type)) {
-            $this->headers['Content-type'] = $this->content_type;
+
+
+        if ($this->message_html && $this->message_text) {
+            $this->headers['Content-type'] = 'multipart/alternative; boundary="' . $this->boundary . '"';
+            $data = '--' . $this->boundary . self::CRLF;
+            $data .= 'Content-type: text/plain; charset=' . $this->charset . self::CRLF . self::CRLF;
+            $data .= $this->message_text . self::CRLF . self::CRLF;
+            $data .= '--' . $this->boundary . self::CRLF;
+            $data .= 'Content-type: text/html; charset=' . $this->charset . self::CRLF . self::CRLF;
+            $data .= $this->message_html . self::CRLF . self::CRLF;
+            $data .= '--' . $this->boundary . '--';
+        } elseif ($this->message_html) {
+            $this->headers['Content-type'] = 'text/html; charset=' . $this->charset;
+            $data = $this->message_html;
+        } else {
+            $this->headers['Content-type'] = 'text/plain; charset=' . $this->charset;
+            $data = $this->message_text;
         }
 
         $this->headers['From'] = $this->formatAddress($this->from);
@@ -239,7 +275,7 @@ class Email
             $headers .= $key . ': ' . $val . self::CRLF;
         }
 
-        $this->log['DATA'][2] = $this->sendCMD($headers . self::CRLF . $this->message . self::CRLF . '.');
+        $this->log['DATA'][2] = $this->sendCMD($headers . self::CRLF . $data . self::CRLF . '.');
         $this->log['QUIT'] = $this->sendCMD('QUIT');
         fclose($this->socket);
         return substr($this->log['DATA'][2], 0, 3) == self::OK;
