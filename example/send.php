@@ -1,16 +1,24 @@
 <?php
 
-use Snipworks\SMTP\Email;
-require_once(dirname(__DIR__) . '/src/email.php');
+use Snipworks\Smtp\Email;
 
-$mail = new Email('smtp.gmail.com', 465);
-$mail->setProtocol(Email::SSL); //SSL or TLS can be used. Or if there's other protocol you have 
-$mail->setLogin('<email address>', '<password>');
-$mail->addTo('<receiver email>', '<receiver name>'); //receiver's name is optional
-$mail->setFrom('<sender email>', '<sender name>'); //sender's name is optional
-$mail->setSubject('Test subject');
-$mail->setMessage('<b>test message</b>', true); //argument 2=true (send HTML mail) | default: false (plain text)
+require_once(dirname(__DIR__) . '/vendor/autoload.php');
 
-echo (($mail->send()) ? 'Mail has been sent' : 'Error sending email') . PHP_EOL;
+$mail = new Email('smtp.gmail.com', 587);
+$mail->setProtocol(Email::TLS)
+    ->setLogin('sender@example.com', 'P4ssW0rD!')
+    ->setFrom('sender@example.com')
+    ->setSubject('Test subject')
+    ->setTextMessage('Plain text message')
+    ->setHtmlMessage('<strong>HTML Text Message</strong>')
+    ->addTo('receiver@example.com')
+    ->addAttachment(dirname(__DIR__) . '/LICENSE')
+    ->addAttachment(dirname(__DIR__) . '/README.md');
 
-print_r($mail->getLog()); //display SMTP log
+if ($mail->send()) {
+    echo 'SMTP Email has been sent' . PHP_EOL;
+    exit(0);
+}
+
+echo 'An error has occurred. Please check the logs below:' . PHP_EOL;
+print_r($mail->getLogs());

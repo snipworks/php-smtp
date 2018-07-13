@@ -1,0 +1,13 @@
+{
+  "name": "snipworks/php-smtp",
+  "description": "Simple PHP SMTP Mail Send Script",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Snipworks\\Smtp\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=5.3"
+  }
+}
