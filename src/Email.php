@@ -449,12 +449,10 @@ class Email
     protected function formatAddressList(array $addresses)
     {
         $data = array();
-        $delimiter = ', ' . self::CRLF;
-
         foreach ($addresses as $address) {
             $data[] = $this->formatAddress($address);
         }
 
-        return implode($delimiter, $data);
+        return implode(', ', $data);
     }
 }
