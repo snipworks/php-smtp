@@ -82,9 +82,7 @@ class Email
     protected $charset = 'utf-8';
 
     /** @var array $headers */
-    protected $headers = array(
-        'MIME-Version' => '1.0',
-    );
+    protected $headers = array();
 
     /**
      * Class constructor
@@ -103,6 +101,8 @@ class Email
         $this->connectionTimeout = $connectionTimeout;
         $this->responseTimeout = $responseTimeout;
         $this->hostname = empty($hostname) ? gethostname() : $hostname;
+        $this->headers['X-Mailer'] = 'PHP/' . phpversion();
+        $this->headers['MIME-Version'] = '1.0';
     }
 
     /**
@@ -293,8 +293,14 @@ class Email
      */
     public function send()
     {
-        $this->socket = fsockopen($this->getServer(), $this->port, $error_number, $error_string,
-            $this->connectionTimeout);
+        $this->socket = fsockopen(
+            $this->getServer(),
+            $this->port,
+            $errorNumber,
+            $errorMessage,
+            $this->connectionTimeout
+        );
+
         if (empty($this->socket)) {
             return false;
         }
@@ -321,7 +327,13 @@ class Email
         $this->headers['Date'] = date('r');
         $this->headers['Subject'] = $this->subject;
         $this->headers['From'] = $this->formatAddress($this->from);
+        $this->headers['Return-Path'] = $this->formatAddress($this->from);
         $this->headers['To'] = $this->formatAddressList($this->to);
+
+        if (!empty($this->replyTo)) {
+            $this->headers['Reply-To'] = $this->formatAddressList($this->replyTo);
+        }
+
         if (!empty($this->cc)) {
             $this->headers['Cc'] = $this->formatAddressList($this->cc);
         }
@@ -329,12 +341,6 @@ class Email
         if (!empty($this->bcc)) {
             $this->headers['Bcc'] = $this->formatAddressList($this->bcc);
         }
-
-        if (!empty($this->replyTo)) {
-            $this->headers['Reply-To'] = $this->formatAddressList($this->replyTo);
-        }
-
-        $this->logs['DATA'][1] = $this->sendCommand('DATA');
 
         $boundary = md5(uniqid(microtime(true), true));
         $this->headers['Content-Type'] = 'multipart/mixed; boundary="mixed-' . $boundary . '"';
@@ -380,6 +386,7 @@ class Email
 
         $this->logs['MESSAGE'] = $message;
         $this->logs['HEADERS'] = $headers;
+        $this->logs['DATA'][1] = $this->sendCommand('DATA');
         $this->logs['DATA'][2] = $this->sendCommand($headers . self::CRLF . $message . self::CRLF . '.');
         $this->logs['QUIT'] = $this->sendCommand('QUIT');
         fclose($this->socket);
