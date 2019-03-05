@@ -313,7 +313,7 @@ class Email
         $this->logs['PASSWORD'] = $this->sendCommand(base64_encode($this->password));
         $this->logs['MAIL_FROM'] = $this->sendCommand('MAIL FROM: <' . $this->from[0] . '>');
 
-        $recipients = array_merge($this->to, $this->cc);
+        $recipients = array_merge($this->to, $this->cc, $this->bcc);
         foreach ($recipients as $address) {
             $this->logs['RECIPIENTS'][] = $this->sendCommand('RCPT TO: <' . $address[0] . '>');
         }
