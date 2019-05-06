@@ -343,10 +343,14 @@ class Email
         }
 
         $boundary = md5(uniqid(microtime(true), true));
-        $this->headers['Content-Type'] = 'multipart/mixed; boundary="mixed-' . $boundary . '"';
 
-        $message = '--mixed-' . $boundary . self::CRLF;
-        $message .= 'Content-Type: multipart/alternative; boundary="alt-' . $boundary . '"' . self::CRLF . self::CRLF;
+        if (!empty($this->attachments)) {
+            $this->headers['Content-Type'] = 'multipart/mixed; boundary="mixed-' . $boundary . '"';
+            $message = '--mixed-' . $boundary . self::CRLF;
+            $message .= 'Content-Type: multipart/alternative; boundary="alt-' . $boundary . '"' . self::CRLF . self::CRLF;
+        } else {
+            $this->headers['Content-Type'] = 'multipart/alternative; boundary="alt-' . $boundary . '"';
+        }
 
         if (!empty($this->textMessage)) {
             $message .= '--alt-' . $boundary . self::CRLF;
@@ -368,16 +372,20 @@ class Email
             foreach ($this->attachments as $attachment) {
                 $filename = pathinfo($attachment, PATHINFO_BASENAME);
                 $contents = file_get_contents($attachment);
+                $type = mime_content_type($attachment);
+                if (!$type) {
+                    $type = 'application/octet-stream';
+                }
 
                 $message .= '--mixed-' . $boundary . self::CRLF;
-                $message .= 'Content-Type: application/octet-stream; name="' . $filename . '"' . self::CRLF;
+                $message .= 'Content-Type: ' . $type . '; name="' . $filename . '"' . self::CRLF;
                 $message .= 'Content-Disposition: attachment; filename="' . $filename . '"' . self::CRLF;
                 $message .= 'Content-Transfer-Encoding: base64' . self::CRLF . self::CRLF;
                 $message .= chunk_split(base64_encode($contents)) . self::CRLF;
             }
-        }
 
-        $message .= '--mixed-' . $boundary . '--';
+            $message .= '--mixed-' . $boundary . '--';
+        }
 
         $headers = '';
         foreach ($this->headers as $k => $v) {
