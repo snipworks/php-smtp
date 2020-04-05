@@ -293,6 +293,7 @@ class Email
      */
     public function send()
     {
+        $message = null;
         $this->socket = fsockopen(
             $this->getServer(),
             $this->port,
@@ -346,7 +347,7 @@ class Email
 
         if (!empty($this->attachments)) {
             $this->headers['Content-Type'] = 'multipart/mixed; boundary="mixed-' . $boundary . '"';
-            $message = '--mixed-' . $boundary . self::CRLF;
+            $message .= '--mixed-' . $boundary . self::CRLF;
             $message .= 'Content-Type: multipart/alternative; boundary="alt-' . $boundary . '"' . self::CRLF . self::CRLF;
         } else {
             $this->headers['Content-Type'] = 'multipart/alternative; boundary="alt-' . $boundary . '"';
