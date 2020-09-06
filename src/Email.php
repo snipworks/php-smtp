@@ -453,7 +453,7 @@ class Email
      */
     protected function formatAddress($address)
     {
-        return (empty($address[1])) ? $address[0] : '"' . $address[1] . '" <' . $address[0] . '>';
+        return (empty($address[1])) ? $address[0] : '"' . addslashes($address[1]) . '" <' . $address[0] . '>';
     }
 
     /**
