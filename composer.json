@@ -9,6 +9,7 @@
   },
   "require": {
     "php": ">=5.3",
-    "ext-openssl": "*"
+    "ext-openssl": "*",
+    "ext-fileinfo": "*"
   }
 }

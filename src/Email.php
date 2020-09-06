@@ -101,8 +101,20 @@ class Email
         $this->connectionTimeout = $connectionTimeout;
         $this->responseTimeout = $responseTimeout;
         $this->hostname = empty($hostname) ? gethostname() : $hostname;
-        $this->headers['X-Mailer'] = 'PHP/' . phpversion();
-        $this->headers['MIME-Version'] = '1.0';
+        $this->setHeader('X-Mailer', 'PHP/' . phpversion());
+        $this->setHeader('MIME-Version', '1.0');
+    }
+
+    /**
+     * @param string $key
+     * @param mixed|null $value
+     * @return Email
+     */
+    public function setHeader($key, $value = null)
+    {
+        $this->headers[$key] = $value;
+
+        return $this;
     }
 
     /**
@@ -325,25 +337,26 @@ class Email
             $this->logs['RECIPIENTS'][] = $this->sendCommand('RCPT TO: <' . $address[0] . '>');
         }
 
-        $this->headers['Date'] = date('r');
-        $this->headers['Subject'] = $this->subject;
-        $this->headers['From'] = $this->formatAddress($this->from);
-        $this->headers['Return-Path'] = $this->formatAddress($this->from);
-        $this->headers['To'] = $this->formatAddressList($this->to);
+        $this->setHeader('Date', date('r'));
+        $this->setHeader('Subject', $this->subject);
+        $this->setHeader('From', $this->formatAddress($this->from));
+        $this->setHeader('Return-Path', $this->formatAddress($this->from));
+        $this->setHeader('To', $this->formatAddressList($this->to));
 
         if (!empty($this->replyTo)) {
-            $this->headers['Reply-To'] = $this->formatAddressList($this->replyTo);
+            $this->setHeader('Reply-To', $this->formatAddressList($this->replyTo));
         }
 
         if (!empty($this->cc)) {
-            $this->headers['Cc'] = $this->formatAddressList($this->cc);
+            $this->setHeader('Cc', $this->formatAddressList($this->cc));
         }
 
         if (!empty($this->bcc)) {
-            $this->headers['Bcc'] = $this->formatAddressList($this->bcc);
+            $this->setHeader('Bcc', $this->formatAddressList($this->bcc));
         }
 
         $boundary = md5(uniqid(microtime(true), true));
+        $this->setHeader('Content-Type', 'multipart/mixed; boundary="mixed-' . $boundary . '"');
 
         if (!empty($this->attachments)) {
             $this->headers['Content-Type'] = 'multipart/mixed; boundary="mixed-' . $boundary . '"';
